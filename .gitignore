@@ -1,0 +1,8 @@
+# Vim
+.*.sw?
+
+# Binaries
+imgctool
+
+# Test input files
+.imgctool
