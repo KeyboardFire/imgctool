@@ -8,14 +8,14 @@ static const char SAVE_FILE[] = ".imgctool";
 struct ictFile {
     char* filename;
     long long data;
-}* files;
+}* files = NULL;
 size_t nFiles = 0;
 
 struct ictCategory {
     char* name;
     char** chkboxes;
     size_t nChkboxes;
-}* categories;
+}* categories = NULL;
 size_t nCategories = 0;
 
 // utility methods
@@ -100,17 +100,59 @@ int main(int argc, char* argv[]) {
 // file data, each in the least amount of bytes to fit (total number of
 //   checkboxes) bits
 
-int save() {
-    return 0;
-}
-
 // this is a little ugly
 // (... it's pretty bad)
-#define ERR_HEADER() do { fprintf(stderr, "file %s corrupted? (invalid header)\n", SAVE_FILE); fclose(f); return 1; } while (0)
 #define ERR_READ() do { fprintf(stderr, "error reading file %s\n", SAVE_FILE); fclose(f); return 1; } while (0)
+#define ERR_WRITE() do { fprintf(stderr, "error writing to file %s\n", SAVE_FILE); fclose(f); return 1; } while (0)
+#define ERR_HEADER() do { fprintf(stderr, "file %s corrupted? (invalid header)\n", SAVE_FILE); fclose(f); return 1; } while (0)
 #define ERR_TERM() do { fprintf(stderr, "file %s terminated prematurely?\n", SAVE_FILE); fclose(f); return 1; } while (0)
 #define ERR_TRAIL() do { fprintf(stderr, "trailing data in %s?\n", SAVE_FILE); fclose(f); return 1; } while (0)
 #define ERR_ZERO() do { fprintf(stderr, "zero length name in %s?\n", SAVE_FILE); fclose(f); return 1; } while (0)
+
+int save() {
+    FILE* f = fopen(SAVE_FILE, "wb");
+    if (f == NULL) ERR_WRITE();
+
+    // write header
+    fwrite("\x89ICT", sizeof(char), 4, f);
+
+    // write categories and checkboxes
+    int i, j;
+    for (i = 0; i < nCategories; ++i) {
+        fwrite(categories[i].name, sizeof(char),
+            strlen(categories[i].name), f);
+        for (j = 0; j < categories[i].nChkboxes; ++j) {
+            fputc('\x31', f);
+            fwrite(categories[i].chkboxes[j], sizeof(char),
+                strlen(categories[i].chkboxes[j]), f);
+        }
+        fputc('\x30', f);
+    }
+    fputc('\x30', f);
+
+    // write filenames
+    if (nFiles >= 1) {
+        fwrite(files[0].filename, sizeof(char), strlen(files[0].filename), f);
+    }
+    for (i = 1; i < nFiles; ++i) {
+        fputc('\x31', f);
+        fwrite(files[i].filename, sizeof(char), strlen(files[i].filename), f);
+    }
+    fputc('\x30', f);
+
+    // write file data
+    int chkboxCount = 0;
+    for (i = 0; i < nCategories; ++i) chkboxCount += categories[i].nChkboxes;
+    int chars = bitsToChars(chkboxCount);
+    for (i = 0; i < nFiles; ++i) {
+        for (j = chars - 1; j >= 0; --j) {
+            fputc((char)((files[i].data >> (j*8)) & 0xFF), f);
+        }
+    }
+
+    fclose(f);
+    return 0;
+}
 
 int restore() {
     FILE* f = fopen(SAVE_FILE, "rb");
@@ -157,7 +199,6 @@ int restoreHeader(FILE* f) {
 int restoreCategories(FILE* f) {
     int ch = '\x30', lastCh = '\0', processingName = 0, bufLen = 0,
         bufAddSize = 10;
-    categories = NULL;
     struct ictCategory currentCategory;
     char* curStr;
     while (true) {
@@ -206,7 +247,6 @@ int restoreCategories(FILE* f) {
 
 int restoreFilenames(FILE* f) {
     int ch = '\x31', lastCh = '\0', bufLen = 0, bufAddSize = 10;
-    files = NULL;
     char* curStr;
     while (true) {
         switch (ch) {
