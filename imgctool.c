@@ -5,6 +5,13 @@
 
 static const char SAVE_FILE[] = ".imgctool";
 
+static const char* CONTROLS[] = {
+    "j/k: category down/up", "h/l: chkbox left/right",
+    "space: toggle chkbox", "n/p: next/prev image",
+    "q/ctrl+c: quit", "w/ctrl+s: save"
+};
+static const int NCONTROLS = sizeof(CONTROLS) / sizeof(char*);
+
 struct ictFile {
     char* filename;
     long long data;
@@ -79,11 +86,56 @@ int main(int argc, char* argv[]) {
     raw();      // disable line buffering, get all keys (including ex. ctrl+C)
     keypad(stdscr, TRUE);  // handling of F1, F2, arrow keys, etc.
     noecho();   // turn off echoing when a key is pressed
-
-    printw("Hello, World!");
     refresh();
 
-    while (getch() != 'q') {}
+    // create windows / interface
+    WINDOW* mainWin = newwin(LINES - (NCONTROLS + 2), COLS, 0, 0);
+    box(mainWin, 0, 0);
+    mvwprintw(mainWin, 0, 2, "categories");
+    wrefresh(mainWin);
+
+    WINDOW* helpWin = newwin(NCONTROLS + 2, COLS, LINES - (NCONTROLS + 2), 0);
+    box(helpWin, 0, 0);
+    mvwprintw(helpWin, 0, 2, "controls");
+    for (i = 0; i < NCONTROLS; ++i) {
+        mvwprintw(helpWin, i + 1, 1, CONTROLS[i]);
+    }
+    wrefresh(helpWin);
+
+    char ch;
+    while (true) {
+        switch (ch = getch()) {
+            case 'j':
+                // TODO category down
+                break;
+            case 'k':
+                // TODO category up
+                break;
+            case 'h':
+                // TODO checkbox left
+                break;
+            case 'l':
+                // TODO checkbox right
+                break;
+            case ' ':
+                // TODO checkbox toggle
+                break;
+            case 'n':
+                // TODO image next
+                break;
+            case 'p':
+                // TODO image prev
+                break;
+            case 'q':
+            case '\x03': // ctrl+c
+                goto quit;
+            case 'w':
+            case '\x13': // ctrl+s
+                save();
+                break;
+        }
+    }
+    quit:
 
     endwin();  // cleanup
 
