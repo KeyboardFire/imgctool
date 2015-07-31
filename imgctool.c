@@ -46,9 +46,7 @@ int main(int argc, char* argv[]) {
 
     // make sure image viewer exists
     char* cmd = malloc((strlen(imgViewer) + 28) * sizeof(char));
-    strcat(cmd, "command -v ");       // 11 chars long
-    strcpy(cmd+11, imgViewer);        // strlen(imgViewer) chars long
-    strcat(cmd, " >/dev/null 2>&1");  // 16 chars long
+    sprintf(cmd, "command -v %s >/dev/null 2>&1", imgViewer);
     if (system(cmd) != 0) {
         fprintf(stderr, "fatal: image viewer `%s' does not exist, aborting\n",
             imgViewer);
