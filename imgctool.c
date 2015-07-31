@@ -3,14 +3,18 @@
 #include <stdlib.h>   // getenv, system
 #include <unistd.h>   // access
 
+#define BUF_ADD_SIZE 10
+
 static const char SAVE_FILE[] = ".imgctool";
 
 static const char* CONTROLS[] = {
+    "A/D: add/del category", "a/d: add/del chkbox",
     "j/k: category down/up", "h/l: chkbox left/right",
     "space: toggle chkbox", "n/p: next/prev image",
     "q/ctrl+c: quit", "w/ctrl+s: save"
 };
 static const int NCONTROLS = sizeof(CONTROLS) / sizeof(char*);
+static const int CONTROL_LEN = 24;  // max len of str in CONTROLS + 2 (padding)
 
 struct ictFile {
     char* filename;
@@ -26,7 +30,7 @@ struct ictCategory {
 size_t nCategories = 0;
 
 // utility methods
-int addCh(char** s, char ch, int bufLen, int bufAddSize);
+int addCh(char** s, char ch, int bufLen);
 int bitsToChars(int bits);
 
 // saving and retrieving data from the SAVE_FILE
@@ -89,22 +93,40 @@ int main(int argc, char* argv[]) {
     refresh();
 
     // create windows / interface
-    WINDOW* mainWin = newwin(LINES - (NCONTROLS + 2), COLS, 0, 0);
+
+    const int CTRL_PER_LINE = COLS / CONTROL_LEN;
+    // http://stackoverflow.com/a/2745086/1223693
+    const int HELP_HEIGHT = (NCONTROLS + CTRL_PER_LINE - 1) / CTRL_PER_LINE + 2;
+
+    WINDOW* mainWin = newwin(LINES - HELP_HEIGHT, COLS, 0, 0);
     box(mainWin, 0, 0);
     mvwprintw(mainWin, 0, 2, "categories");
     wrefresh(mainWin);
 
-    WINDOW* helpWin = newwin(NCONTROLS + 2, COLS, LINES - (NCONTROLS + 2), 0);
+    WINDOW* helpWin = newwin(HELP_HEIGHT, COLS, LINES - HELP_HEIGHT, 0);
     box(helpWin, 0, 0);
     mvwprintw(helpWin, 0, 2, "controls");
     for (i = 0; i < NCONTROLS; ++i) {
-        mvwprintw(helpWin, i + 1, 1, CONTROLS[i]);
+        mvwprintw(helpWin, 1 + i / CTRL_PER_LINE,
+            1 + CONTROL_LEN * (i % CTRL_PER_LINE), CONTROLS[i]);
     }
     wrefresh(helpWin);
 
     char ch;
     while (true) {
         switch (ch = getch()) {
+            case 'A':
+                // TODO category add
+                break;
+            case 'a':
+                // TODO checkbox add
+                break;
+            case 'D':
+                // TODO category del
+                break;
+            case 'd':
+                // TODO checkbox del
+                break;
             case 'j':
                 // TODO category down
                 break;
@@ -247,8 +269,7 @@ int restoreHeader(FILE* f) {
 }
 
 int restoreCategories(FILE* f) {
-    int ch = '\x30', lastCh = '\0', processingName = 0, bufLen = 0,
-        bufAddSize = 10;
+    int ch = '\x30', lastCh = '\0', processingName = 0, bufLen = 0;
     struct ictCategory currentCategory;
     char* curStr;
     while (true) {
@@ -261,7 +282,7 @@ int restoreCategories(FILE* f) {
                 categories = realloc(categories, (++nCategories) *
                     sizeof(struct ictCategory));
                 currentCategory = categories[nCategories - 1];
-                currentCategory.name = calloc((bufLen = bufAddSize),
+                currentCategory.name = calloc((bufLen = BUF_ADD_SIZE),
                     sizeof(char));
                 currentCategory.chkboxes = NULL;
                 currentCategory.nChkboxes = 0;
@@ -270,7 +291,7 @@ int restoreCategories(FILE* f) {
             case '\x31':  // ASCII unit separator
                 if ((lastCh == '\x30') || (lastCh == '\x31')) ERR_ZERO();
                 // start a new checkbox
-                curStr = calloc((bufLen = bufAddSize), sizeof(char));
+                curStr = calloc((bufLen = BUF_ADD_SIZE), sizeof(char));
                 currentCategory.chkboxes = realloc(currentCategory.chkboxes,
                     (++currentCategory.nChkboxes) * sizeof(char*));
                 currentCategory.chkboxes[currentCategory.nChkboxes - 1] =
@@ -278,7 +299,7 @@ int restoreCategories(FILE* f) {
                 break;
             default: {
                 bufLen = addCh(processingName ? &currentCategory.name :
-                    &curStr, ch, bufLen, bufAddSize);
+                    &curStr, ch, bufLen);
                 break;
             }
         }
@@ -296,7 +317,7 @@ int restoreCategories(FILE* f) {
 }
 
 int restoreFilenames(FILE* f) {
-    int ch = '\x31', lastCh = '\0', bufLen = 0, bufAddSize = 10;
+    int ch = '\x31', lastCh = '\0', bufLen = 0;
     char* curStr;
     while (true) {
         switch (ch) {
@@ -317,13 +338,13 @@ int restoreFilenames(FILE* f) {
             case '\x31':
                 if (lastCh == '\x31') ERR_ZERO();
                 // start a new filename
-                curStr = calloc((bufLen = bufAddSize), sizeof(char));
+                curStr = calloc((bufLen = BUF_ADD_SIZE), sizeof(char));
                 files = realloc(files, (++nFiles) * sizeof(struct ictFile));
                 files[nFiles - 1].filename = curStr;
                 files[nFiles - 1].data = 0;
                 break;
             default:
-                bufLen = addCh(&curStr, ch, bufLen, bufAddSize);
+                bufLen = addCh(&curStr, ch, bufLen);
                 break;
         }
 
@@ -361,13 +382,13 @@ int restoreFileData(FILE* f) {
     return 0;
 }
 
-int addCh(char** s, char ch, int bufLen, int bufAddSize) {
+int addCh(char** s, char ch, int bufLen) {
     size_t len = strlen(*s);
     if (len + 1 >= bufLen) {
         // allocate more memory
-        *s = realloc(*s, bufLen + bufAddSize);
-        memset((*s) + bufLen, '\0', bufAddSize);
-        bufLen += bufAddSize;
+        *s = realloc(*s, bufLen + BUF_ADD_SIZE);
+        memset((*s) + bufLen, '\0', BUF_ADD_SIZE);
+        bufLen += BUF_ADD_SIZE;
     }
     (*s)[len] = ch;
     return bufLen;
