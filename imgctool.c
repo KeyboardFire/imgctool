@@ -305,7 +305,7 @@ int restoreFileData(FILE* f) {
     }
     free(buf);
 
-    if (!feof(f)) ERR_TRAIL();
+    if (fgetc(f) != -1) ERR_TRAIL();
 
     return 0;
 }
