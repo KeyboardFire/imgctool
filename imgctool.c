@@ -310,6 +310,7 @@ int restoreFilenames(FILE* f) {
                         free(curStr);
                         free(files);
                         files = NULL;
+                        nFiles = 0;
                     }
                 }
                 return 0;
