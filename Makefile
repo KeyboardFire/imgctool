@@ -1,5 +1,5 @@
 all:
-	gcc imgctool.c -o imgctool -lncurses -Wall -O0 -g
+	gcc imgctool.c saverestore.c saverestore.h ictdata.h -o imgctool -lncurses -Wall -O0 -g
 
 release:
-	gcc imgctool.c -o imgctool -lncurses -Wall -O3
+	gcc imgctool.c saverestore.c saverestore.h ictdata.h -o imgctool -lncurses -Wall -O3
