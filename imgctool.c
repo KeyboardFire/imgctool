@@ -8,13 +8,13 @@
 static const char SAVE_FILE[] = ".imgctool";
 
 static const char* CONTROLS[] = {
-    "A/D: add/del category", "a/d: add/del chkbox",
-    "j/k: category down/up", "h/l: chkbox left/right",
-    "space: toggle chkbox", "n/p: next/prev image",
-    "q/ctrl+c: quit", "w/ctrl+s: save"
+    "A/D/R: add/del/rename category", "a/d/r: add/del/rename chkbox",
+    "j/k: category down/up", "h/l: checkbox left/right",
+    "space: toggle checkbox", "n/p: next/previous image",
+    "q/ctrl+c: save and quit", "w/ctrl+s: save"
 };
 static const int NCONTROLS = sizeof(CONTROLS) / sizeof(char*);
-static const int CONTROL_LEN = 24;  // max len of str in CONTROLS + 2 (padding)
+static const int CONTROL_LEN = 32;  // max len of str in CONTROLS + 2 (padding)
 
 struct ictFile {
     char* filename;
@@ -126,6 +126,12 @@ int main(int argc, char* argv[]) {
                 break;
             case 'd':
                 // TODO checkbox del
+                break;
+            case 'R':
+                // TODO category rename
+                break;
+            case 'r':
+                // TODO checkbox rename
                 break;
             case 'j':
                 // TODO category down
