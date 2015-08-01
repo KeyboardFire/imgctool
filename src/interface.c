@@ -26,6 +26,11 @@ static int nCpos = 0, cposIdx = 0;
 
 static int fileIdx = 0;
 
+static void updateCursor() {
+    wmove(mainWin, cursorPositions[cposIdx].y, cursorPositions[cposIdx].x);
+    wrefresh(mainWin);
+}
+
 static void updateMainWin() {
     wmove(mainWin, 1, 1);
     free(cursorPositions);
@@ -82,8 +87,7 @@ static void updateMainWin() {
     }
     box(mainWin, 0, 0);
     mvwprintw(mainWin, 0, 2, "categories");
-    wmove(mainWin, cursorPositions[cposIdx].y, cursorPositions[cposIdx].x);
-    wrefresh(mainWin);
+    updateCursor();  // also calls wrefresh(mainWin);
 }
 
 static void updateHelpWin() {
@@ -282,11 +286,13 @@ void interfaceGo() {
                 // image next
                 if (fileIdx < nFiles - 1) ++fileIdx;
                 updateFileWin();
+                updateCursor();
                 break;
             case 'p':
                 // image next
                 if (fileIdx > 0) --fileIdx;
                 updateFileWin();
+                updateCursor();
                 break;
             case 'q':
             case '\x03': // ctrl+c
