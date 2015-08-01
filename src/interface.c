@@ -39,10 +39,10 @@ static void updateMainWin() {
                 // wrap
                 waddstr(mainWin, "\n ");
                 cursorPositions[idx][0] = y + 1;
-                cursorPositions[idx][1] = 4;
+                cursorPositions[idx][1] = 3;
             } else {
                 cursorPositions[idx][0] = y;
-                cursorPositions[idx][1] = x + 4;
+                cursorPositions[idx][1] = x + 3;
             }
             ++idx;
 
@@ -158,10 +158,14 @@ void interfaceGo() {
                 // TODO checkbox rename
                 break;
             case 'j':
-                // TODO category down
+                // category down
+                ++cposIdx;
+                updateMainWin();
                 break;
             case 'k':
-                // TODO category up
+                // category up
+                --cposIdx;
+                updateMainWin();
                 break;
             case 'h':
                 // TODO checkbox left
