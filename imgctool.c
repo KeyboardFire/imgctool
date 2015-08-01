@@ -116,7 +116,15 @@ int main(int argc, char* argv[]) {
     while (true) {
         switch (ch = getch()) {
             case 'A':
-                // TODO category add
+                // add a category
+                categories = realloc(categories, (++nCategories) *
+                    sizeof(struct ictCategory));
+                categories[nCategories - 1].name = calloc(BUF_ADD_SIZE,
+                    sizeof(char));
+                categories[nCategories - 1].name[0] = 'h';
+                categories[nCategories - 1].name[1] = 'i';
+                categories[nCategories - 1].chkboxes = NULL;
+                categories[nCategories - 1].nChkboxes = 0;
                 break;
             case 'a':
                 // TODO checkbox add
