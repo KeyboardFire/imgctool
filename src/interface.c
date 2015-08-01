@@ -16,7 +16,12 @@ static const int NCONTROLS = sizeof(CONTROLS) / sizeof(char*);
 static const int CONTROL_LEN = 32;  // max len of str in CONTROLS + 2 (padding)
 
 static WINDOW *mainWin, *helpWin, *inputPopup;
-static int (*cursorPositions)[2];
+static struct cpos {
+    int y;
+    int x;
+    int categoryIdx;
+    int chkboxIdx;
+}* cursorPositions;
 static int nCpos = 0, cposIdx = 0;
 
 static void updateMainWin() {
@@ -38,12 +43,14 @@ static void updateMainWin() {
             if ((x + 6 + strlen(categories[i].chkboxes[j])) > (COLS - 1)) {
                 // wrap
                 waddstr(mainWin, "\n ");
-                cursorPositions[idx][0] = y + 1;
-                cursorPositions[idx][1] = 3;
+                cursorPositions[idx].y = y + 1;
+                cursorPositions[idx].x = 3;
             } else {
-                cursorPositions[idx][0] = y;
-                cursorPositions[idx][1] = x + 3;
+                cursorPositions[idx].y = y;
+                cursorPositions[idx].x = x + 3;
             }
+            cursorPositions[idx].categoryIdx = i;
+            cursorPositions[idx].chkboxIdx = j;
             ++idx;
 
             waddstr(mainWin, "  [ ] ");
@@ -53,8 +60,10 @@ static void updateMainWin() {
         }
         if (categories[i].nChkboxes == 0) {
             // allow the cursor to go to (y, 1) (start of name)
-            cursorPositions[idx][0] = y;
-            cursorPositions[idx][1] = 1;
+            cursorPositions[idx].y = y;
+            cursorPositions[idx].x = 1;
+            cursorPositions[idx].categoryIdx = i;
+            cursorPositions[idx].chkboxIdx = -1;
         }
 
         // go to next line
@@ -62,7 +71,7 @@ static void updateMainWin() {
     }
     box(mainWin, 0, 0);
     mvwprintw(mainWin, 0, 2, "categories");
-    wmove(mainWin, cursorPositions[cposIdx][0], cursorPositions[cposIdx][1]);
+    wmove(mainWin, cursorPositions[cposIdx].y, cursorPositions[cposIdx].x);
     wrefresh(mainWin);
 }
 
@@ -160,16 +169,16 @@ void interfaceGo() {
             // TODO eliminate ugly code repetition in j and k
             case 'j': {
                 // category down
-                int y = cursorPositions[cposIdx][0],
-                    x = cursorPositions[cposIdx][1],
+                int y = cursorPositions[cposIdx].y,
+                    x = cursorPositions[cposIdx].x,
                     newY = -1, newX = -1, newIdx = -1,
                     i;
                 for (i = 0; i < nCpos; ++i) {
-                    if ((cursorPositions[i][0] > y) &&
-                            (newIdx == -1 || cursorPositions[i][0] < newY ||
-                             abs(cursorPositions[i][1] - x) < abs(newX - x))) {
-                        newY = cursorPositions[i][0];
-                        newX = cursorPositions[i][1];
+                    if ((cursorPositions[i].y > y) &&
+                            (newIdx == -1 || cursorPositions[i].y < newY ||
+                             abs(cursorPositions[i].x - x) < abs(newX - x))) {
+                        newY = cursorPositions[i].y;
+                        newX = cursorPositions[i].x;
                         newIdx = i;
                     }
                 }
@@ -179,16 +188,16 @@ void interfaceGo() {
             }
             case 'k': {
                 // category up
-                int y = cursorPositions[cposIdx][0],
-                    x = cursorPositions[cposIdx][1],
+                int y = cursorPositions[cposIdx].y,
+                    x = cursorPositions[cposIdx].x,
                     newY = -1, newX = -1, newIdx = -1,
                     i;
                 for (i = 0; i < nCpos; ++i) {
-                    if ((cursorPositions[i][0] < y) &&
-                            (newIdx == -1 || cursorPositions[i][0] > newY ||
-                             abs(cursorPositions[i][1] - x) < abs(newX - x))) {
-                        newY = cursorPositions[i][0];
-                        newX = cursorPositions[i][1];
+                    if ((cursorPositions[i].y < y) &&
+                            (newIdx == -1 || cursorPositions[i].y > newY ||
+                             abs(cursorPositions[i].x - x) < abs(newX - x))) {
+                        newY = cursorPositions[i].y;
+                        newX = cursorPositions[i].x;
                         newIdx = i;
                     }
                 }
