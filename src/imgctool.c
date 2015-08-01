@@ -53,6 +53,27 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    // add files
+    // TODO make this more efficient, not 2 allocs per file
+    int j, skipFile = 0;
+    for (i = 1; i < argc; ++i) {
+        // do not add if this file already exists
+        for (j = 0; j < nFiles; ++j) {
+            if (strcmp(files[j].filename, argv[i]) == 0) {
+                skipFile = 1;
+                break;
+            }
+        }
+        if (!skipFile) {
+            files = realloc(files, (++nFiles) * sizeof(struct ictFile));
+            files[nFiles - 1].filename = calloc(strlen(argv[i]) + 1,
+                sizeof(char));
+            strcpy(files[nFiles - 1].filename, argv[i]);
+            files[nFiles - 1].data = 0;
+        }
+        skipFile = 0;
+    }
+
     // finally ready to start!
     printf("Ready. Press enter to begin.");
     getchar();

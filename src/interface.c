@@ -15,7 +15,7 @@ static const char* CONTROLS[] = {
 static const int NCONTROLS = sizeof(CONTROLS) / sizeof(char*);
 static const int CONTROL_LEN = 32;  // max len of str in CONTROLS + 2 (padding)
 
-static WINDOW *mainWin, *helpWin, *inputPopup;
+static WINDOW *mainWin, *helpWin, *fileWin, *inputPopup;
 static struct cpos {
     int y;
     int x;
@@ -23,6 +23,8 @@ static struct cpos {
     int chkboxIdx;
 }* cursorPositions;
 static int nCpos = 0, cposIdx = 0;
+
+static int fileIdx = 0;
 
 static void updateMainWin() {
     wmove(mainWin, 1, 1);
@@ -87,6 +89,15 @@ static void updateHelpWin() {
     wrefresh(helpWin);
 }
 
+static void updateFileWin() {
+    wclear(fileWin);
+    mvwprintw(fileWin, 1, 1, "%s (%i of %i)", files[fileIdx].filename,
+        fileIdx + 1, nFiles);
+    box(fileWin, 0, 0);
+    mvwprintw(fileWin, 0, 2, "current file");
+    wrefresh(fileWin);
+}
+
 static void (*inputCallback)(char* s);
 static int gettingInput = 0;
 static char* inputBuf;
@@ -132,7 +143,10 @@ void interfaceGo() {
     helpWin = newwin(HELP_HEIGHT, COLS, LINES - HELP_HEIGHT, 0);
     updateHelpWin();
 
-    mainWin = newwin(LINES - HELP_HEIGHT, COLS, 0, 0);
+    fileWin = newwin(3, COLS, 0, 0);
+    updateFileWin();
+
+    mainWin = newwin(LINES - HELP_HEIGHT - 3, COLS, 3, 0);
     updateMainWin();
 
     char ch;
@@ -257,10 +271,14 @@ void interfaceGo() {
                 // TODO checkbox toggle
                 break;
             case 'n':
-                // TODO image next
+                // image next
+                if (fileIdx < nFiles - 1) ++fileIdx;
+                updateFileWin();
                 break;
             case 'p':
-                // TODO image prev
+                // image next
+                if (fileIdx > 0) --fileIdx;
+                updateFileWin();
                 break;
             case 'q':
             case '\x03': // ctrl+c
