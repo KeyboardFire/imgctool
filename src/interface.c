@@ -157,16 +157,45 @@ void interfaceGo() {
             case 'r':
                 // TODO checkbox rename
                 break;
-            case 'j':
+            // TODO eliminate ugly code repetition in j and k
+            case 'j': {
                 // category down
-                ++cposIdx;
+                int y = cursorPositions[cposIdx][0],
+                    x = cursorPositions[cposIdx][1],
+                    newY = -1, newX = -1, newIdx = -1,
+                    i;
+                for (i = 0; i < nCpos; ++i) {
+                    if ((cursorPositions[i][0] > y) &&
+                            (newIdx == -1 || cursorPositions[i][0] < newY ||
+                             abs(cursorPositions[i][1] - x) < abs(newX - x))) {
+                        newY = cursorPositions[i][0];
+                        newX = cursorPositions[i][1];
+                        newIdx = i;
+                    }
+                }
+                if (newIdx != -1) cposIdx = newIdx;
                 updateMainWin();
                 break;
-            case 'k':
+            }
+            case 'k': {
                 // category up
-                --cposIdx;
+                int y = cursorPositions[cposIdx][0],
+                    x = cursorPositions[cposIdx][1],
+                    newY = -1, newX = -1, newIdx = -1,
+                    i;
+                for (i = 0; i < nCpos; ++i) {
+                    if ((cursorPositions[i][0] < y) &&
+                            (newIdx == -1 || cursorPositions[i][0] > newY ||
+                             abs(cursorPositions[i][1] - x) < abs(newX - x))) {
+                        newY = cursorPositions[i][0];
+                        newX = cursorPositions[i][1];
+                        newIdx = i;
+                    }
+                }
+                if (newIdx != -1) cposIdx = newIdx;
                 updateMainWin();
                 break;
+            }
             case 'h':
                 // TODO checkbox left
                 break;
