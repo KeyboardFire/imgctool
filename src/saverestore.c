@@ -150,6 +150,7 @@ int restoreCategories(FILE* f) {
                     (++currentCategory->nChkboxes) * sizeof(char*));
                 currentCategory->chkboxes[currentCategory->nChkboxes - 1] =
                     curStr;
+                processingName = 0;
                 break;
             default: {
                 bufLen = addCh(processingName ? &currentCategory->name :
