@@ -16,23 +16,45 @@ static const int NCONTROLS = sizeof(CONTROLS) / sizeof(char*);
 static const int CONTROL_LEN = 32;  // max len of str in CONTROLS + 2 (padding)
 
 static WINDOW *mainWin, *helpWin, *inputPopup;
+static int (*cursorPositions)[2];
+static int nCpos = 0, cposIdx = 0;
 
 static void updateMainWin() {
     wmove(mainWin, 1, 1);
+    free(cursorPositions);
+    cursorPositions = NULL;
     int i, j;
     for (i = 0; i < nCategories; ++i) {
         wattron(mainWin, A_BOLD);
         waddstr(mainWin, categories[i].name);
         wattroff(mainWin, A_BOLD);
 
+        int idx = nCpos;
+        nCpos += (categories[i].nChkboxes == 0 ? 1 : categories[i].nChkboxes);
+        cursorPositions = realloc(cursorPositions, nCpos * sizeof(int[2]));
+
+        int y, x; getyx(mainWin, y, x);
         for (j = 0; j < categories[i].nChkboxes; ++j) {
-            int y, x; getyx(mainWin, y, x);
             if ((x + 6 + strlen(categories[i].chkboxes[j])) > (COLS - 1)) {
                 // wrap
-                waddstr(mainWin, "\n   ");
+                waddstr(mainWin, "\n ");
+                cursorPositions[idx][0] = y + 1;
+                cursorPositions[idx][1] = 4;
+            } else {
+                cursorPositions[idx][0] = y;
+                cursorPositions[idx][1] = x + 4;
             }
+            ++idx;
+
             waddstr(mainWin, "  [ ] ");
             waddstr(mainWin, categories[i].chkboxes[j]);
+
+            getyx(mainWin, y, x);
+        }
+        if (categories[i].nChkboxes == 0) {
+            // allow the cursor to go to (y, 1) (start of name)
+            cursorPositions[idx][0] = y;
+            cursorPositions[idx][1] = 1;
         }
 
         // go to next line
@@ -40,6 +62,7 @@ static void updateMainWin() {
     }
     box(mainWin, 0, 0);
     mvwprintw(mainWin, 0, 2, "categories");
+    wmove(mainWin, cursorPositions[cposIdx][0], cursorPositions[cposIdx][1]);
     wrefresh(mainWin);
 }
 
@@ -85,11 +108,11 @@ void interfaceGo() {
     // http://stackoverflow.com/a/2745086/1223693
     const int HELP_HEIGHT = (NCONTROLS + CTRL_PER_LINE - 1) / CTRL_PER_LINE + 2;
 
-    mainWin = newwin(LINES - HELP_HEIGHT, COLS, 0, 0);
-    updateMainWin();
-
     helpWin = newwin(HELP_HEIGHT, COLS, LINES - HELP_HEIGHT, 0);
     updateHelpWin();
+
+    mainWin = newwin(LINES - HELP_HEIGHT, COLS, 0, 0);
+    updateMainWin();
 
     char ch;
     while (1) {
