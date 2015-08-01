@@ -28,6 +28,7 @@ static void updateMainWin() {
     wmove(mainWin, 1, 1);
     free(cursorPositions);
     cursorPositions = NULL;
+    nCpos = 0;
     int i, j;
     for (i = 0; i < nCategories; ++i) {
         wattron(mainWin, A_BOLD);
@@ -36,7 +37,7 @@ static void updateMainWin() {
 
         int idx = nCpos;
         nCpos += (categories[i].nChkboxes == 0 ? 1 : categories[i].nChkboxes);
-        cursorPositions = realloc(cursorPositions, nCpos * sizeof(int[2]));
+        cursorPositions = realloc(cursorPositions, nCpos * sizeof(struct cpos));
 
         int y, x; getyx(mainWin, y, x);
         for (j = 0; j < categories[i].nChkboxes; ++j) {
@@ -112,6 +113,17 @@ static void cbAddCategory(char* s) {
     updateMainWin();  // display new category
 }
 
+static void cbAddChkbox(char* s) {
+    struct ictCategory *currentCategory =
+        &categories[cursorPositions[cposIdx].categoryIdx];
+    currentCategory->chkboxes = realloc(currentCategory->chkboxes,
+        (++currentCategory->nChkboxes) * sizeof(char*));
+    currentCategory->chkboxes[currentCategory->nChkboxes - 1] =
+        calloc(strlen(s)+1, sizeof(char));
+    strcpy(currentCategory->chkboxes[currentCategory->nChkboxes - 1], s);
+    updateMainWin();  // display new checkbox
+}
+
 void interfaceGo() {
     const int CTRL_PER_LINE = COLS / CONTROL_LEN;
     // http://stackoverflow.com/a/2745086/1223693
@@ -152,7 +164,7 @@ void interfaceGo() {
                 getInput(cbAddCategory, "enter category name:");
                 break;
             case 'a':
-                // TODO checkbox add
+                getInput(cbAddChkbox, "enter checkbox name:");
                 break;
             case 'D':
                 // TODO category del
