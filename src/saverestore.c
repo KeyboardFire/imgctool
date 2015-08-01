@@ -8,10 +8,8 @@
 #include "ictdata.h"
 
 static const char SAVE_FILE[] = ".imgctool";
-static const int BUF_ADD_SIZE = 10;
 
 // utility methods
-static int addCh(char** s, char ch, int bufLen);
 static int bitsToChars(int bits);
 
 // restore() sub-methods
@@ -236,18 +234,6 @@ int restoreFileData(FILE* f) {
     if (fgetc(f) != -1) ERR_TRAIL();
 
     return 0;
-}
-
-int addCh(char** s, char ch, int bufLen) {
-    size_t len = strlen(*s);
-    if (len + 1 >= bufLen) {
-        // allocate more memory
-        *s = realloc(*s, bufLen + BUF_ADD_SIZE);
-        memset((*s) + bufLen, '\0', BUF_ADD_SIZE);
-        bufLen += BUF_ADD_SIZE;
-    }
-    (*s)[len] = ch;
-    return bufLen;
 }
 
 int bitsToChars(int bits) {

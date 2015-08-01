@@ -1,6 +1,7 @@
 #include "interface.h"
 
 #include <ncurses.h>
+#include <string.h>
 
 #include "ictdata.h"
 #include "saverestore.h"
@@ -14,44 +15,93 @@ static const char* CONTROLS[] = {
 static const int NCONTROLS = sizeof(CONTROLS) / sizeof(char*);
 static const int CONTROL_LEN = 32;  // max len of str in CONTROLS + 2 (padding)
 
-static WINDOW *mainWin, *helpWin;
+static WINDOW *mainWin, *helpWin, *inputPopup;
+
+static void updateMainWin() {
+    box(mainWin, 0, 0);
+    mvwprintw(mainWin, 0, 2, "categories");
+    int i;
+    for (i = 0; i < nCategories; ++i) {
+        mvwprintw(mainWin, 1 + i, 1, categories[i].name);
+    }
+    wrefresh(mainWin);
+}
+
+static void updateHelpWin() {
+    box(helpWin, 0, 0);
+    mvwprintw(helpWin, 0, 2, "controls");
+    int i;
+    for (i = 0; i < NCONTROLS; ++i) {
+        mvwprintw(helpWin, 1 + i / (COLS / CONTROL_LEN),
+            1 + CONTROL_LEN * (i % (COLS / CONTROL_LEN)), CONTROLS[i]);
+    }
+    wrefresh(helpWin);
+}
+
+static void (*inputCallback)(char* s);
+static int gettingInput = 0;
+static char* inputBuf;
+static int inputBufLen;
+static void getInput(void (*cb)(char* s), char* prompt) {
+    inputCallback = cb;
+    gettingInput = 1;
+    inputBuf = calloc((inputBufLen = BUF_ADD_SIZE), sizeof(char));
+
+    inputPopup = newwin(3, COLS, LINES / 2 - 1, 0);
+    box(inputPopup, 0, 0);
+    mvwprintw(inputPopup, 0, 2, prompt);
+    wmove(inputPopup, 1, 1);
+    wrefresh(inputPopup);
+}
+
+static void cbAddCategory(char* s) {
+    categories = realloc(categories, (++nCategories) *
+        sizeof(struct ictCategory));
+    categories[nCategories - 1].name = calloc(strlen(s)+1, sizeof(char));
+    strcpy(categories[nCategories - 1].name, s);
+    categories[nCategories - 1].chkboxes = NULL;
+    categories[nCategories - 1].nChkboxes = 0;
+    updateMainWin();  // display new category
+}
 
 void interfaceGo() {
-    int i;  // just a loop variable
-
     const int CTRL_PER_LINE = COLS / CONTROL_LEN;
     // http://stackoverflow.com/a/2745086/1223693
     const int HELP_HEIGHT = (NCONTROLS + CTRL_PER_LINE - 1) / CTRL_PER_LINE + 2;
 
     mainWin = newwin(LINES - HELP_HEIGHT, COLS, 0, 0);
-    box(mainWin, 0, 0);
-    mvwprintw(mainWin, 0, 2, "categories");
-    for (i = 0; i < nCategories; ++i) {
-        mvwprintw(mainWin, 1 + i, 1, categories[i].name);
-    }
-    wrefresh(mainWin);
+    updateMainWin();
 
     helpWin = newwin(HELP_HEIGHT, COLS, LINES - HELP_HEIGHT, 0);
-    box(helpWin, 0, 0);
-    mvwprintw(helpWin, 0, 2, "controls");
-    for (i = 0; i < NCONTROLS; ++i) {
-        mvwprintw(helpWin, 1 + i / CTRL_PER_LINE,
-            1 + CONTROL_LEN * (i % CTRL_PER_LINE), CONTROLS[i]);
-    }
-    wrefresh(helpWin);
+    updateHelpWin();
 
     char ch;
     while (1) {
-        switch (ch = getch()) {
+        ch = getch();
+        if (gettingInput) {
+            if (ch == '\n') {
+                inputCallback(inputBuf);
+                gettingInput = 0;
+                free(inputBuf);
+
+                delwin(inputPopup);
+            } else if (ch == '\x07') {  // backspace
+                if (strlen(inputBuf) != 0) {
+                    inputBuf[strlen(inputBuf) - 1] = '\0';
+
+                    waddstr(inputPopup, "\b \b");
+                    wrefresh(inputPopup);
+                }
+            } else {
+                inputBufLen = addCh(&inputBuf, ch, inputBufLen);
+
+                waddch(inputPopup, ch);
+                wrefresh(inputPopup);
+            }
+        } else switch (ch) {
             case 'A':
                 // add a category
-                categories = realloc(categories, (++nCategories) *
-                    sizeof(struct ictCategory));
-                categories[nCategories - 1].name = calloc(3, sizeof(char));
-                categories[nCategories - 1].name[0] = 'h';
-                categories[nCategories - 1].name[1] = 'i';
-                categories[nCategories - 1].chkboxes = NULL;
-                categories[nCategories - 1].nChkboxes = 0;
+                getInput(cbAddCategory, "enter category name:");
                 break;
             case 'a':
                 // TODO checkbox add
