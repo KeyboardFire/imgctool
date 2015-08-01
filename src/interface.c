@@ -188,7 +188,8 @@ void interfaceGo() {
                 for (i = 0; i < nCpos; ++i) {
                     if ((cursorPositions[i].y > y) &&
                             (newIdx == -1 || cursorPositions[i].y < newY ||
-                             abs(cursorPositions[i].x - x) < abs(newX - x))) {
+                             (cursorPositions[i].y == newY &&
+                              abs(cursorPositions[i].x - x) < abs(newX - x)))) {
                         newY = cursorPositions[i].y;
                         newX = cursorPositions[i].x;
                         newIdx = i;
@@ -207,7 +208,8 @@ void interfaceGo() {
                 for (i = 0; i < nCpos; ++i) {
                     if ((cursorPositions[i].y < y) &&
                             (newIdx == -1 || cursorPositions[i].y > newY ||
-                             abs(cursorPositions[i].x - x) < abs(newX - x))) {
+                             (cursorPositions[i].y == newY &&
+                              abs(cursorPositions[i].x - x) < abs(newX - x)))) {
                         newY = cursorPositions[i].y;
                         newX = cursorPositions[i].x;
                         newIdx = i;
