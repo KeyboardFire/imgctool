@@ -31,7 +31,7 @@ static void updateMainWin() {
     free(cursorPositions);
     cursorPositions = NULL;
     nCpos = 0;
-    int i, j;
+    int i, j, chkboxCount = 0;
     for (i = 0; i < nCategories; ++i) {
         wattron(mainWin, A_BOLD);
         waddstr(mainWin, categories[i].name);
@@ -53,13 +53,15 @@ static void updateMainWin() {
                 cursorPositions[idx].x = x + 3;
             }
             cursorPositions[idx].categoryIdx = i;
-            cursorPositions[idx].chkboxIdx = j;
+            cursorPositions[idx].chkboxIdx = chkboxCount;
             ++idx;
 
-            waddstr(mainWin, "  [ ] ");
+            wprintw(mainWin, "  [%c] ", (files[fileIdx].data >> chkboxCount)
+                & 1 ? 'x' : ' ');
             waddstr(mainWin, categories[i].chkboxes[j]);
 
             getyx(mainWin, y, x);
+            ++chkboxCount;
         }
         if (categories[i].nChkboxes == 0) {
             // allow the cursor to go to (y, 1) (start of name)
@@ -276,7 +278,10 @@ void interfaceGo() {
                 break;
             }
             case ' ':
-                // TODO checkbox toggle
+                // checkbox toggle
+                if (cursorPositions[cposIdx].chkboxIdx == -1) break;
+                files[fileIdx].data ^= 1 << cursorPositions[cposIdx].chkboxIdx;
+                updateMainWin();
                 break;
             case 'n':
                 // image next
