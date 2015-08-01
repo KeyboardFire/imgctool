@@ -72,6 +72,14 @@ static void updateMainWin() {
         // go to next line
         waddstr(mainWin, "\n ");
     }
+    if (nCategories == 0) {
+        // fine, the cursor can go to (1, 1)
+        cursorPositions = malloc(sizeof(struct cpos));
+        cursorPositions[0].y = 1;
+        cursorPositions[0].x = 1;
+        cursorPositions[0].categoryIdx = -1;
+        cursorPositions[0].chkboxIdx = -1;
+    }
     box(mainWin, 0, 0);
     mvwprintw(mainWin, 0, 2, "categories");
     wmove(mainWin, cursorPositions[cposIdx].y, cursorPositions[cposIdx].x);
