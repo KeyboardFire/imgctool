@@ -276,7 +276,7 @@ int restoreHeader(FILE* f) {
 
 int restoreCategories(FILE* f) {
     int ch = '\x30', lastCh = '\0', processingName = 0, bufLen = 0;
-    struct ictCategory currentCategory;
+    struct ictCategory* currentCategory;
     char* curStr;
     while (true) {
         switch (ch) {
@@ -287,24 +287,24 @@ int restoreCategories(FILE* f) {
                 // we're starting a new category
                 categories = realloc(categories, (++nCategories) *
                     sizeof(struct ictCategory));
-                currentCategory = categories[nCategories - 1];
-                currentCategory.name = calloc((bufLen = BUF_ADD_SIZE),
+                currentCategory = &categories[nCategories - 1];
+                currentCategory->name = calloc((bufLen = BUF_ADD_SIZE),
                     sizeof(char));
-                currentCategory.chkboxes = NULL;
-                currentCategory.nChkboxes = 0;
+                currentCategory->chkboxes = NULL;
+                currentCategory->nChkboxes = 0;
                 processingName = 1;
                 break;
             case '\x31':  // ASCII unit separator
                 if ((lastCh == '\x30') || (lastCh == '\x31')) ERR_ZERO();
                 // start a new checkbox
                 curStr = calloc((bufLen = BUF_ADD_SIZE), sizeof(char));
-                currentCategory.chkboxes = realloc(currentCategory.chkboxes,
-                    (++currentCategory.nChkboxes) * sizeof(char*));
-                currentCategory.chkboxes[currentCategory.nChkboxes - 1] =
+                currentCategory->chkboxes = realloc(currentCategory->chkboxes,
+                    (++currentCategory->nChkboxes) * sizeof(char*));
+                currentCategory->chkboxes[currentCategory->nChkboxes - 1] =
                     curStr;
                 break;
             default: {
-                bufLen = addCh(processingName ? &currentCategory.name :
+                bufLen = addCh(processingName ? &currentCategory->name :
                     &curStr, ch, bufLen);
                 break;
             }
