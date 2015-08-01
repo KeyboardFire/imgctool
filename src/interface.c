@@ -178,7 +178,7 @@ void interfaceGo() {
             case 'r':
                 // TODO checkbox rename
                 break;
-            // TODO eliminate ugly code repetition in j and k
+            // TODO eliminate ugly code repetition in j/k and h/l
             case 'j': {
                 // category down
                 int y = cursorPositions[cposIdx].y,
@@ -219,12 +219,40 @@ void interfaceGo() {
                 updateMainWin();
                 break;
             }
-            case 'h':
-                // TODO checkbox left
+            case 'h': {
+                // checkbox left
+                int y = cursorPositions[cposIdx].y,
+                    x = cursorPositions[cposIdx].x,
+                    newX = -1, newIdx = -1,
+                    i;
+                for (i = 0; i < nCpos; ++i) {
+                    if (cursorPositions[i].y == y && cursorPositions[i].x < x
+                            && (newIdx == -1 || cursorPositions[i].x > newX)) {
+                        newX = cursorPositions[i].x;
+                        newIdx = i;
+                    }
+                }
+                if (newIdx != -1) cposIdx = newIdx;
+                updateMainWin();
                 break;
-            case 'l':
-                // TODO checkbox right
+            }
+            case 'l': {
+                // checkbox right
+                int y = cursorPositions[cposIdx].y,
+                    x = cursorPositions[cposIdx].x,
+                    newX = -1, newIdx = -1,
+                    i;
+                for (i = 0; i < nCpos; ++i) {
+                    if (cursorPositions[i].y == y && cursorPositions[i].x > x
+                            && (newIdx == -1 || cursorPositions[i].x < newX)) {
+                        newX = cursorPositions[i].x;
+                        newIdx = i;
+                    }
+                }
+                if (newIdx != -1) cposIdx = newIdx;
+                updateMainWin();
                 break;
+            }
             case ' ':
                 // TODO checkbox toggle
                 break;
