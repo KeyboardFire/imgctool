@@ -21,6 +21,7 @@ static struct cpos {
     int x;
     int categoryIdx;
     int chkboxIdx;
+    int relChkboxIdx;
 }* cursorPositions;
 static int nCpos = 0, cposIdx = 0;
 #define CPOS cursorPositions[cposIdx]
@@ -80,6 +81,7 @@ static void updateMainWin() {
             }
             cursorPositions[idx].categoryIdx = i;
             cursorPositions[idx].chkboxIdx = chkboxCount;
+            cursorPositions[idx].relChkboxIdx = j;
             ++idx;
 
             wprintw(mainWin, "  [%c] ", (files[fileIdx].data >> chkboxCount)
@@ -95,6 +97,7 @@ static void updateMainWin() {
             cursorPositions[idx].x = 1;
             cursorPositions[idx].categoryIdx = i;
             cursorPositions[idx].chkboxIdx = -1;
+            cursorPositions[idx].relChkboxIdx = -1;
         }
 
         // go to next line
@@ -107,6 +110,7 @@ static void updateMainWin() {
         cursorPositions[0].x = 1;
         cursorPositions[0].categoryIdx = -1;
         cursorPositions[0].chkboxIdx = -1;
+        cursorPositions[0].relChkboxIdx = -1;
     }
     box(mainWin, 0, 0);
     mvwprintw(mainWin, 0, 2, "categories");
@@ -181,10 +185,10 @@ static void cbDelCategory(char* s) {
 }
 
 static void cbDelChkbox(char* s) {
-    if (s[0] == 'y' && CPOS.chkboxIdx != -1) {
-        memmove(CCAT.chkboxes + CPOS.chkboxIdx,
-            CCAT.chkboxes + CPOS.chkboxIdx + 1,
-            (CCAT.nChkboxes - CPOS.chkboxIdx - 1) * sizeof(char*));
+    if (s[0] == 'y' && CPOS.relChkboxIdx != -1) {
+        memmove(CCAT.chkboxes + CPOS.relChkboxIdx,
+            CCAT.chkboxes + CPOS.relChkboxIdx + 1,
+            (CCAT.nChkboxes - CPOS.relChkboxIdx - 1) * sizeof(char*));
         --CCAT.nChkboxes;
         CCAT.chkboxes = realloc(CCAT.chkboxes, CCAT.nChkboxes * sizeof(char*));
     }
