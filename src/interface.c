@@ -23,6 +23,8 @@ static struct cpos {
     int chkboxIdx;
 }* cursorPositions;
 static int nCpos = 0, cposIdx = 0;
+#define CPOS cursorPositions[cposIdx]
+#define CCAT categories[CPOS.categoryIdx]
 
 static int fileIdx = 0;
 
@@ -108,7 +110,7 @@ static void updateMainWin() {
     }
     box(mainWin, 0, 0);
     mvwprintw(mainWin, 0, 2, "categories");
-    wmove(mainWin, cursorPositions[cposIdx].y, cursorPositions[cposIdx].x);
+    wmove(mainWin, CPOS.y, CPOS.x);
     wrefresh(mainWin);
 }
 
@@ -159,22 +161,17 @@ static void cbAddCategory(char* s) {
 }
 
 static void cbAddChkbox(char* s) {
-    struct ictCategory *currentCategory =
-        &categories[cursorPositions[cposIdx].categoryIdx];
-    currentCategory->chkboxes = realloc(currentCategory->chkboxes,
-        (++currentCategory->nChkboxes) * sizeof(char*));
-    currentCategory->chkboxes[currentCategory->nChkboxes - 1] =
-        calloc(strlen(s)+1, sizeof(char));
-    strcpy(currentCategory->chkboxes[currentCategory->nChkboxes - 1], s);
+    CCAT.chkboxes = realloc(CCAT.chkboxes, (++CCAT.nChkboxes) * sizeof(char*));
+    CCAT.chkboxes[CCAT.nChkboxes - 1] = calloc(strlen(s)+1, sizeof(char));
+    strcpy(CCAT.chkboxes[CCAT.nChkboxes - 1], s);
     updateMainWin();  // display new checkbox
 }
 
 static void cbDelCategory(char* s) {
     if (s[0] == 'y' && nCategories > 0) {
-        memmove(categories + cursorPositions[cposIdx].categoryIdx,
-                categories + cursorPositions[cposIdx].categoryIdx + 1,
-                (nCategories - cursorPositions[cposIdx].categoryIdx - 1) *
-                    sizeof(struct ictCategory));
+        memmove(categories + CPOS.categoryIdx,
+            categories + CPOS.categoryIdx + 1,
+            (nCategories - CPOS.categoryIdx - 1) * sizeof(struct ictCategory));
         --nCategories;
         categories = realloc(categories, nCategories * sizeof(struct ictCategory));
     }
@@ -184,15 +181,12 @@ static void cbDelCategory(char* s) {
 }
 
 static void cbDelChkbox(char* s) {
-    if (s[0] == 'y' && cursorPositions[cposIdx].chkboxIdx != -1) {
-        struct ictCategory *cc =
-            &categories[cursorPositions[cposIdx].categoryIdx];
-        memmove(cc->chkboxes + cursorPositions[cposIdx].chkboxIdx,
-                cc->chkboxes + cursorPositions[cposIdx].chkboxIdx + 1,
-                (cc->nChkboxes - cursorPositions[cposIdx].chkboxIdx - 1) *
-                    sizeof(char*));
-        --cc->nChkboxes;
-        cc->chkboxes = realloc(cc->chkboxes, cc->nChkboxes * sizeof(char*));
+    if (s[0] == 'y' && CPOS.chkboxIdx != -1) {
+        memmove(CCAT.chkboxes + CPOS.chkboxIdx,
+            CCAT.chkboxes + CPOS.chkboxIdx + 1,
+            (CCAT.nChkboxes - CPOS.chkboxIdx - 1) * sizeof(char*));
+        --CCAT.nChkboxes;
+        CCAT.chkboxes = realloc(CCAT.chkboxes, CCAT.nChkboxes * sizeof(char*));
     }
     wclear(mainWin);
     if (cposIdx > 0) --cposIdx;
@@ -264,8 +258,7 @@ void interfaceGo(char* viewer) {
             // TODO eliminate ugly code repetition in j/k and h/l
             case 'j': {
                 // category down
-                int y = cursorPositions[cposIdx].y,
-                    x = cursorPositions[cposIdx].x,
+                int y = CPOS.y, x = CPOS.x,
                     newY = -1, newX = -1, newIdx = -1,
                     i;
                 for (i = 0; i < nCpos; ++i) {
@@ -284,8 +277,7 @@ void interfaceGo(char* viewer) {
             }
             case 'k': {
                 // category up
-                int y = cursorPositions[cposIdx].y,
-                    x = cursorPositions[cposIdx].x,
+                int y = CPOS.y, x = CPOS.x,
                     newY = -1, newX = -1, newIdx = -1,
                     i;
                 for (i = 0; i < nCpos; ++i) {
@@ -304,8 +296,7 @@ void interfaceGo(char* viewer) {
             }
             case 'h': {
                 // checkbox left
-                int y = cursorPositions[cposIdx].y,
-                    x = cursorPositions[cposIdx].x,
+                int y = CPOS.y, x = CPOS.x,
                     newX = -1, newIdx = -1,
                     i;
                 for (i = 0; i < nCpos; ++i) {
@@ -321,8 +312,7 @@ void interfaceGo(char* viewer) {
             }
             case 'l': {
                 // checkbox right
-                int y = cursorPositions[cposIdx].y,
-                    x = cursorPositions[cposIdx].x,
+                int y = CPOS.y, x = CPOS.x,
                     newX = -1, newIdx = -1,
                     i;
                 for (i = 0; i < nCpos; ++i) {
@@ -338,8 +328,8 @@ void interfaceGo(char* viewer) {
             }
             case ' ':
                 // checkbox toggle
-                if (cursorPositions[cposIdx].chkboxIdx == -1) break;
-                files[fileIdx].data ^= 1 << cursorPositions[cposIdx].chkboxIdx;
+                if (CPOS.chkboxIdx == -1) break;
+                files[fileIdx].data ^= 1 << CPOS.chkboxIdx;
                 updateMainWin();
                 break;
             case 'n':
