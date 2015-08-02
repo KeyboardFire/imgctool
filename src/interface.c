@@ -169,6 +169,26 @@ static void cbAddChkbox(char* s) {
     updateMainWin();  // display new checkbox
 }
 
+static void cbDelCategory(char* s) {
+    if (s[0] == 'y' && nCategories > 0) {
+        memmove(categories + cursorPositions[cposIdx].categoryIdx,
+                categories + cursorPositions[cposIdx].categoryIdx + 1,
+                (nCategories - cursorPositions[cposIdx].categoryIdx - 1) *
+                    sizeof(struct ictCategory));
+        --nCategories;
+        categories = realloc(categories, nCategories * sizeof(struct ictCategory));
+    }
+    wclear(mainWin);
+    if (cposIdx > 0) --cposIdx;
+    updateMainWin();
+}
+
+static void cbDelChkbox(char* s) {
+    if (s[0] == 'y') {
+        // TODO
+    }
+}
+
 void interfaceGo(char* viewer) {
     imgViewer = malloc((strlen(viewer) + 1) * sizeof(char));
     strcpy(imgViewer, viewer);
@@ -220,10 +240,10 @@ void interfaceGo(char* viewer) {
                 getInput(cbAddChkbox, "enter checkbox name:");
                 break;
             case 'D':
-                // TODO category del
+                getInput(cbDelCategory, "are you sure? [yn]");
                 break;
             case 'd':
-                // TODO checkbox del
+                getInput(cbDelChkbox, "are you sure? [yn]");
                 break;
             case 'R':
                 // TODO category rename
