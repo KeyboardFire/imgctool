@@ -184,9 +184,19 @@ static void cbDelCategory(char* s) {
 }
 
 static void cbDelChkbox(char* s) {
-    if (s[0] == 'y') {
-        // TODO
+    if (s[0] == 'y' && cursorPositions[cposIdx].chkboxIdx != -1) {
+        struct ictCategory *cc =
+            &categories[cursorPositions[cposIdx].categoryIdx];
+        memmove(cc->chkboxes + cursorPositions[cposIdx].chkboxIdx,
+                cc->chkboxes + cursorPositions[cposIdx].chkboxIdx + 1,
+                (cc->nChkboxes - cursorPositions[cposIdx].chkboxIdx - 1) *
+                    sizeof(char*));
+        --cc->nChkboxes;
+        cc->chkboxes = realloc(cc->chkboxes, cc->nChkboxes * sizeof(char*));
     }
+    wclear(mainWin);
+    if (cposIdx > 0) --cposIdx;
+    updateMainWin();
 }
 
 void interfaceGo(char* viewer) {
