@@ -26,6 +26,30 @@ static int nCpos = 0, cposIdx = 0;
 
 static int fileIdx = 0;
 
+static char* imgViewer;
+static void updateImage() {
+    char* buf;
+
+    buf = malloc((strlen(imgViewer) + 25) * sizeof(char));
+    sprintf(buf, "killall %s >/dev/null 2>&1", imgViewer);
+    system(buf);
+    free(buf);
+
+    buf = malloc((strlen(imgViewer) + strlen(files[fileIdx].filename) + 18)
+        * sizeof(char));
+    sprintf(buf, "%s %s >/dev/null 2>&1 &", imgViewer,
+        files[fileIdx].filename);
+    system(buf);
+    free(buf);
+
+    // a little (ugly) special-casing for i3
+    // (we expect to be running as a floating window)
+    if ((getenv("DESKTOP_SESSION") != NULL) &&
+            (strcmp(getenv("DESKTOP_SESSION"), "i3") == 0)) {
+        system("( sleep 0.25; i3-msg 'focus mode_toggle' ) >/dev/null 2>&1 &");
+    }
+}
+
 static void updateMainWin() {
     wmove(mainWin, 1, 1);
     free(cursorPositions);
@@ -145,7 +169,10 @@ static void cbAddChkbox(char* s) {
     updateMainWin();  // display new checkbox
 }
 
-void interfaceGo() {
+void interfaceGo(char* viewer) {
+    imgViewer = malloc((strlen(viewer) + 1) * sizeof(char));
+    strcpy(imgViewer, viewer);
+
     const int CTRL_PER_LINE = COLS / CONTROL_LEN;
     // http://stackoverflow.com/a/2745086/1223693
     const int HELP_HEIGHT = (NCONTROLS + CTRL_PER_LINE - 1) / CTRL_PER_LINE + 2;
@@ -158,6 +185,8 @@ void interfaceGo() {
 
     mainWin = newwin(LINES - HELP_HEIGHT - 3, COLS, 3, 0);
     updateMainWin();
+
+    updateImage();
 
     char ch;
     while (1) {
@@ -288,12 +317,14 @@ void interfaceGo() {
                 if (fileIdx < nFiles - 1) ++fileIdx;
                 updateFileWin();
                 updateMainWin();
+                updateImage();
                 break;
             case 'p':
                 // image next
                 if (fileIdx > 0) --fileIdx;
                 updateFileWin();
                 updateMainWin();
+                updateImage();
                 break;
             case 'q':
             case '\x03': // ctrl+c

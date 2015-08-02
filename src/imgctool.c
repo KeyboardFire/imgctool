@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 
     // find image viewer program
     char* imgViewer = getenv("IMG_VIEWER");
-    if (imgViewer == NULL) imgViewer = "eog";
+    if (imgViewer == NULL) imgViewer = "display";
     printf("Using image viewer `%s'. To change, call %s with the environment "
         "variable IMG_VIEWER set to a variable of your choice.\n",
         imgViewer, argv[0]);
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
     noecho();   // turn off echoing when a key is pressed
     refresh();
 
-    interfaceGo();
+    interfaceGo(imgViewer);
 
     // cleanup ncurses
     endwin();

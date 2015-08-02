@@ -1,6 +1,6 @@
 #ifndef __INTERFACE_H__
 #define __INTERFACE_H__
 
-void interfaceGo();
+void interfaceGo(char* imgViewer);
 
 #endif
