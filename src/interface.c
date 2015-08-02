@@ -178,9 +178,9 @@ static void cbDelCategory(char* s) {
             (nCategories - CPOS.categoryIdx - 1) * sizeof(struct ictCategory));
         --nCategories;
         categories = realloc(categories, nCategories * sizeof(struct ictCategory));
+        if (cposIdx > 0) --cposIdx;
     }
     wclear(mainWin);
-    if (cposIdx > 0) --cposIdx;
     updateMainWin();
 }
 
@@ -191,9 +191,9 @@ static void cbDelChkbox(char* s) {
             (CCAT.nChkboxes - CPOS.relChkboxIdx - 1) * sizeof(char*));
         --CCAT.nChkboxes;
         CCAT.chkboxes = realloc(CCAT.chkboxes, CCAT.nChkboxes * sizeof(char*));
+        if (cposIdx > 0) --cposIdx;
     }
     wclear(mainWin);
-    if (cposIdx > 0) --cposIdx;
     updateMainWin();
 }
 
